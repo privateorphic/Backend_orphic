@@ -405,7 +405,7 @@ public class AttendanceService {
                             .orElse(null);
 
                     boolean hasActiveSession = userLogins.stream().anyMatch(l -> l.getStatus() == LoginStatus.ACTIVE);
-                    AttendanceStatus status = hasActiveSession ? AttendanceStatus.CHECKED_IN : AttendanceStatus.PRESENT;
+                    AttendanceStatus status = hasActiveSession ? AttendanceStatus.CHECKED_IN : AttendanceStatus.CHECKED_OUT;
 
                     String duration = null;
                     if (firstLogin != null && lastLogout != null) {
