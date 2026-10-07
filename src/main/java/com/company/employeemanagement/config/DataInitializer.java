@@ -27,55 +27,75 @@ public class DataInitializer {
     @Bean
     public ApplicationRunner initData() {
         return args -> {
-            // Create default departments if none exist
-            if (departmentRepository.count() == 0) {
-                List<Department> departments = List.of(
-                        Department.builder().name("Engineering").description("Software Engineering Department").build(),
-                        Department.builder().name("Human Resources").description("HR Department").build(),
-                        Department.builder().name("Marketing").description("Marketing Department").build(),
-                        Department.builder().name("Finance").description("Finance Department").build(),
-                        Department.builder().name("Operations").description("Operations Department").build()
-                );
-                departmentRepository.saveAll(departments);
-                log.info("Default departments created.");
+            // Create or update default departments
+            List<String[]> targetDepts = List.of(
+                    new String[]{"Search Engine Optimisation (SEO)", "Search Engine Optimisation Department"},
+                    new String[]{"Video Editing", "Video Editing and Post Production"},
+                    new String[]{"Social Media", "Social Media Marketing & Operations"},
+                    new String[]{"Graphic Design", "Graphic Design and Visual Media"},
+                    new String[]{"Digital Marketing", "Digital Marketing & Advertising"},
+                    new String[]{"Human Resource (HR)", "Human Resource and People Operations"}
+            );
+
+            for (String[] deptData : targetDepts) {
+                try {
+                    if (!departmentRepository.existsByName(deptData[0])) {
+                        departmentRepository.save(Department.builder()
+                                .name(deptData[0])
+                                .description(deptData[1])
+                                .build());
+                    }
+                } catch (Exception e) {
+                    log.warn("Department initialization skipped for {}: {}", deptData[0], e.getMessage());
+                }
             }
 
             // Create default ADMIN user if none exists
-            if (!userRepository.existsByEmployeeId("orphic2026")) {
-                Department hrDept = departmentRepository.findByName("Human Resources").orElse(null);
-                User admin = User.builder()
-                        .employeeId("orphic2026")
-                        .name("System Administrator")
-                        .email("privateorphic@gmail.com")
-                        .password(passwordEncoder.encode("orphic@2026"))
-                        .role(Role.ADMIN)
-                        .department(hrDept)
-                        .jobTitle("System Administrator")
-                        .joiningDate(LocalDate.now())
-                        .employmentType(EmploymentType.FULL_TIME)
-                        .status(UserStatus.ACTIVE)
-                        .build();
-                userRepository.save(admin);
-                log.info("Default ADMIN user created: privateorphic@gmail.com (orphic2026) / orphic@2026");
+            if (!userRepository.existsByEmployeeId("orphic2026") && !userRepository.existsByEmail("privateorphic@gmail.com")) {
+                try {
+                    Department hrDept = departmentRepository.findByName("Human Resource (HR)")
+                            .orElseGet(() -> departmentRepository.findByName("Human Resources").orElse(null));
+                    User admin = User.builder()
+                            .employeeId("orphic2026")
+                            .name("System Administrator")
+                            .email("privateorphic@gmail.com")
+                            .password(passwordEncoder.encode("orphic@2026"))
+                            .role(Role.ADMIN)
+                            .department(hrDept)
+                            .jobTitle("System Administrator")
+                            .joiningDate(LocalDate.now())
+                            .employmentType(EmploymentType.FULL_TIME)
+                            .status(UserStatus.ACTIVE)
+                            .build();
+                    userRepository.save(admin);
+                    log.info("Default ADMIN user created: privateorphic@gmail.com (orphic2026) / orphic@2026");
+                } catch (Exception e) {
+                    log.warn("ADMIN user initialization skipped: {}", e.getMessage());
+                }
             }
 
             // Create default HR user if none exists
-            if (!userRepository.existsByEmployeeId("orphichr2026")) {
-                Department hrDept = departmentRepository.findByName("Human Resources").orElse(null);
-                User hr = User.builder()
-                        .employeeId("orphichr2026")
-                        .name("HR Manager")
-                        .email("privateorphichr@gmail.com")
-                        .password(passwordEncoder.encode("Hr@2026"))
-                        .role(Role.HR)
-                        .department(hrDept)
-                        .jobTitle("HR Manager")
-                        .joiningDate(LocalDate.now())
-                        .employmentType(EmploymentType.FULL_TIME)
-                        .status(UserStatus.ACTIVE)
-                        .build();
-                userRepository.save(hr);
-                log.info("Default HR user created: privateorphichr@gmail.com (orphichr2026) / Hr@2026");
+            if (!userRepository.existsByEmployeeId("orphichr2026") && !userRepository.existsByEmail("privateorphichr@gmail.com")) {
+                try {
+                    Department hrDept = departmentRepository.findByName("Human Resource (HR)")
+                            .orElseGet(() -> departmentRepository.findByName("Human Resources").orElse(null));
+                    User hr = User.builder()
+                            .employeeId("orphichr2026")
+                            .name("HR Manager")
+                            .email("privateorphichr@gmail.com")
+                            .password(passwordEncoder.encode("Hr@2026"))
+                            .role(Role.HR)
+                            .department(hrDept)
+                            .jobTitle("HR Manager")
+                            .joiningDate(LocalDate.now())
+                            .employmentType(EmploymentType.FULL_TIME)
+                            .status(UserStatus.ACTIVE)
+                            .build();
+                    userRepository.save(hr);
+                    log.info("Default HR user created: privateorphichr@gmail.com (orphichr2026) / Hr@2026");
+                } catch (Exception e) {
+                    log.warn("HR user initialization skipped: {}", e.getMessage());
+                }
             }
         };
     }

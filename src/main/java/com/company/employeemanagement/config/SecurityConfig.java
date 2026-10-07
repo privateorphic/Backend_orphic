@@ -73,6 +73,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                // Admin and HR task export
+                .requestMatchers("/api/admin/tasks/export", "/api/v1/admin/tasks/export").hasAnyRole("ADMIN", "HR")
                 // Admin only
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // HR and Admin
