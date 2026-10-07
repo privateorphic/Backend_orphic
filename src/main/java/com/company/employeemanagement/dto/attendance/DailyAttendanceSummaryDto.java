@@ -13,7 +13,13 @@ public class DailyAttendanceSummaryDto {
     private LocalDate attendanceDate;
     private AttendanceStatus status;
     private LocalTime morningCheckIn;
+    private Double morningLatitude;
+    private Double morningLongitude;
+    private Double morningDistanceFromOffice;
     private LocalTime eveningCheckOut;
+    private Double eveningLatitude;
+    private Double eveningLongitude;
+    private Double eveningDistanceFromOffice;
     private String officeDuration;
     private int morningTaskCount;
     private int tasksAdded;
