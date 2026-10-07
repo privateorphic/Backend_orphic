@@ -1,35 +1,21 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!target/classes/META-INF/
-!target/test-classes/META-INF/
+!target/classes/architecture.html
+!target/site/jacoco/index.html
 
-### Local configuration files
-*.log
-.env
-*.tmp
+### Settings ###
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
 
-### STS ###
-.apt_generated
+### IDE ###
+.idea
 .classpath
-.factorypath
 .project
 .settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+*.launch
+*.factorypath
+.buildpath
 *.iml
-*.ipr
 
-### NetBeans ###
-/nbproject/private/
-/build/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-task-list/
-
-### VS Code ###
-.vscode/
+### LOGS ###
+*.log
