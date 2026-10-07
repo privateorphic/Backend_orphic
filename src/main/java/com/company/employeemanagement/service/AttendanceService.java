@@ -17,6 +17,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AttendanceService {
 
+    private static final ZoneId IST_ZONE = ZoneId.of("Asia/Kolkata");
     private final DailyAttendanceRepository dailyAttendanceRepository;
     private final DailyTaskSnapshotRepository dailyTaskSnapshotRepository;
     private final TaskActivityHistoryRepository taskActivityHistoryRepository;
@@ -44,7 +47,7 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse checkIn(CheckInRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         Optional<DailyAttendance> existingOpt = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(currentUser, today);
 
@@ -79,7 +82,7 @@ public class AttendanceService {
         DailyAttendance attendance = existingOpt.orElseGet(DailyAttendance::new);
         attendance.setEmployee(currentUser);
         attendance.setAttendanceDate(today);
-        attendance.setMorningCheckIn(LocalTime.now());
+        attendance.setMorningCheckIn(LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS));
         attendance.setMorningLatitude(request.getLatitude());
         attendance.setMorningLongitude(request.getLongitude());
         attendance.setMorningDistanceFromOffice(distance);
@@ -105,7 +108,7 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse checkOut(CheckOutRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         DailyAttendance attendance = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(currentUser, today)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "No morning check-in found for today. Please check in first."));
@@ -115,7 +118,7 @@ public class AttendanceService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "You have already checked out for today at " + formattedTime + ".");
         }
 
-        LocalTime checkoutTime = LocalTime.now();
+        LocalTime checkoutTime = LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS);
         attendance.setEveningCheckOut(checkoutTime);
 
         if (request != null && request.getLatitude() != null && request.getLongitude() != null) {
@@ -159,7 +162,7 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse wfhCheckIn(CheckInRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         List<LeaveRequest> approvedWfh = leaveRequestRepository.findApprovedWfhRequestOnDate(currentUser, today);
         if (approvedWfh.isEmpty()) {
@@ -178,7 +181,7 @@ public class AttendanceService {
         DailyAttendance attendance = existingOpt.orElseGet(DailyAttendance::new);
         attendance.setEmployee(currentUser);
         attendance.setAttendanceDate(today);
-        attendance.setMorningCheckIn(LocalTime.now());
+        attendance.setMorningCheckIn(LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS));
         attendance.setWorkMode(WorkMode.WFH);
         attendance.setStatus(AttendanceStatus.WORKING);
 
@@ -197,7 +200,7 @@ public class AttendanceService {
             loc.setWfhRequest(approvedWfh.get(0));
             loc.setLatitude(request.getLatitude());
             loc.setLongitude(request.getLongitude());
-            loc.setCapturedAt(LocalDateTime.now());
+            loc.setCapturedAt(LocalDateTime.now(IST_ZONE));
             wfhLocationHistoryRepository.save(loc);
         }
 
@@ -217,7 +220,7 @@ public class AttendanceService {
     @Transactional
     public AttendanceResponse endWorkDay(CheckOutRequest request) {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         DailyAttendance attendance = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(currentUser, today)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "No check-in record found for today. Please check in first."));
@@ -226,7 +229,7 @@ public class AttendanceService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Your workday has already been ended today.");
         }
 
-        LocalTime checkoutTime = LocalTime.now();
+        LocalTime checkoutTime = LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS);
         attendance.setEveningCheckOut(checkoutTime);
         attendance.setStatus(AttendanceStatus.COMPLETED);
 
@@ -251,7 +254,7 @@ public class AttendanceService {
             loc.setAttendance(saved);
             loc.setLatitude(request.getLatitude());
             loc.setLongitude(request.getLongitude());
-            loc.setCapturedAt(LocalDateTime.now());
+            loc.setCapturedAt(LocalDateTime.now(IST_ZONE));
             wfhLocationHistoryRepository.save(loc);
         }
 
@@ -271,7 +274,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public DailyAttendanceSummaryDto getTodayAttendance() {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         Optional<DailyAttendance> attendanceOpt = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(currentUser, today);
 
@@ -294,7 +297,7 @@ public class AttendanceService {
 
     @Transactional(readOnly = true)
     public EmployeeDailyActivityResponse getEmployeeDailyActivity(Long employeeId, LocalDate date) {
-        LocalDate queryDate = date != null ? date : LocalDate.now();
+        LocalDate queryDate = date != null ? date : LocalDate.now(IST_ZONE);
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", employeeId));
 
@@ -321,7 +324,7 @@ public class AttendanceService {
             // If evening snapshots are not frozen yet (user active during the shift before check-out),
             // construct current live snapshots from real-time tasks so completion and updates show live!
             if (eveningSnapshots.isEmpty()) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = LocalDateTime.now(IST_ZONE);
                 eveningSnapshots = taskRepository.findByAssignedTo(employee).stream()
                         .map(t -> TaskSnapshotDto.builder()
                                 .taskId(t.getId())
@@ -360,7 +363,7 @@ public class AttendanceService {
 
     @Transactional(readOnly = true)
     public Page<AttendanceResponse> getAdminAttendanceList(LocalDate date, Pageable pageable) {
-        LocalDate queryDate = date != null ? date : LocalDate.now();
+        LocalDate queryDate = date != null ? date : LocalDate.now(IST_ZONE);
 
         // 1. Fetch all active employees
         List<User> activeEmployees = userRepository.findByStatus(UserStatus.ACTIVE);
@@ -412,7 +415,7 @@ public class AttendanceService {
                         Duration d = Duration.between(firstLogin, lastLogout);
                         duration = String.format("%dh %dm", d.toHours(), d.toMinutesPart());
                     } else if (firstLogin != null) {
-                        Duration d = Duration.between(firstLogin, LocalTime.now());
+                        Duration d = Duration.between(firstLogin, LocalTime.now(IST_ZONE));
                         duration = String.format("%dh %dm", d.toHours(), d.toMinutesPart());
                     }
 

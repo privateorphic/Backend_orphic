@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import java.util.List;
 @Slf4j
 public class WfhServiceImpl implements WfhService {
 
+    private static final ZoneId IST_ZONE = ZoneId.of("Asia/Kolkata");
     private final LeaveRequestRepository leaveRequestRepository;
     private final DailyAttendanceRepository dailyAttendanceRepository;
     private final WfhLocationHistoryRepository wfhLocationHistoryRepository;
@@ -137,7 +139,7 @@ public class WfhServiceImpl implements WfhService {
 
         request.setStatus(LeaveStatus.APPROVED);
         request.setReviewedBy(reviewer);
-        request.setReviewedAt(LocalDateTime.now());
+        request.setReviewedAt(LocalDateTime.now(IST_ZONE));
         if (approvalRequest != null && approvalRequest.getComments() != null) {
             request.setReviewerComments(approvalRequest.getComments());
         }
@@ -178,7 +180,7 @@ public class WfhServiceImpl implements WfhService {
 
         request.setStatus(LeaveStatus.REJECTED);
         request.setReviewedBy(reviewer);
-        request.setReviewedAt(LocalDateTime.now());
+        request.setReviewedAt(LocalDateTime.now(IST_ZONE));
         request.setReviewerComments(reason);
 
         LeaveRequest saved = leaveRequestRepository.save(request);
@@ -224,7 +226,7 @@ public class WfhServiceImpl implements WfhService {
     @Transactional
     public void recordLocation(WfhLocationRequest locationRequest) {
         User currentUser = securityUtils.getCurrentUser();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
 
         var attendanceOpt = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(currentUser, today);
         if (attendanceOpt.isEmpty()) {
@@ -246,7 +248,7 @@ public class WfhServiceImpl implements WfhService {
         loc.setLatitude(locationRequest.getLatitude());
         loc.setLongitude(locationRequest.getLongitude());
         loc.setAccuracyMeters(locationRequest.getAccuracyMeters());
-        loc.setCapturedAt(LocalDateTime.now());
+        loc.setCapturedAt(LocalDateTime.now(IST_ZONE));
 
         wfhLocationHistoryRepository.save(loc);
     }
@@ -258,7 +260,7 @@ public class WfhServiceImpl implements WfhService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", employeeId));
 
         var latestOpt = wfhLocationHistoryRepository.findLatestByEmployeeId(employeeId);
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
         var attOpt = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
 
         return buildActiveEmployeeDto(employee, attOpt.orElse(null), latestOpt.orElse(null));
@@ -271,7 +273,7 @@ public class WfhServiceImpl implements WfhService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", employeeId));
 
         List<WfhLocationHistory> history = wfhLocationHistoryRepository.findHistoryByEmployeeId(employeeId);
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
         var attOpt = dailyAttendanceRepository.findByEmployeeAndAttendanceDate(employee, today);
 
         return history.stream()
@@ -282,7 +284,7 @@ public class WfhServiceImpl implements WfhService {
     @Override
     @Transactional(readOnly = true)
     public List<WfhActiveEmployeeDto> getActiveWfhEmployees() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST_ZONE);
         List<DailyAttendance> todayWfhAttendance = dailyAttendanceRepository.findByAttendanceDate(today).stream()
                 .filter(a -> a.getWorkMode() == WorkMode.WFH)
                 .toList();
@@ -308,7 +310,7 @@ public class WfhServiceImpl implements WfhService {
 
         String activeSessionTime = "0h 0m";
         if (attendance != null && attendance.getMorningCheckIn() != null) {
-            LocalTime end = attendance.getEveningCheckOut() != null ? attendance.getEveningCheckOut() : LocalTime.now();
+            LocalTime end = attendance.getEveningCheckOut() != null ? attendance.getEveningCheckOut() : LocalTime.now(IST_ZONE);
             Duration duration = Duration.between(attendance.getMorningCheckIn(), end);
             activeSessionTime = String.format("%dh %dm", duration.toHours(), duration.toMinutesPart());
         }

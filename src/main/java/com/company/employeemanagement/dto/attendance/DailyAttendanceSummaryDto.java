@@ -1,5 +1,6 @@
 package com.company.employeemanagement.dto.attendance;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.company.employeemanagement.entity.AttendanceStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -12,10 +13,12 @@ import java.time.LocalTime;
 public class DailyAttendanceSummaryDto {
     private LocalDate attendanceDate;
     private AttendanceStatus status;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime morningCheckIn;
     private Double morningLatitude;
     private Double morningLongitude;
     private Double morningDistanceFromOffice;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime eveningCheckOut;
     private Double eveningLatitude;
     private Double eveningLongitude;

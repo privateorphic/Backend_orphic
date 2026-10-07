@@ -1,5 +1,6 @@
 package com.company.employeemanagement.dto.attendance;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.company.employeemanagement.entity.AttendanceStatus;
 import com.company.employeemanagement.entity.WorkMode;
 import lombok.Builder;
@@ -18,10 +19,12 @@ public class AttendanceResponse {
     private LocalDate attendanceDate;
     private WorkMode workMode;
     private Boolean isWfhApprovedToday;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime morningCheckIn;
     private Double morningLatitude;
     private Double morningLongitude;
     private Double morningDistanceFromOffice;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime eveningCheckOut;
     private Double eveningLatitude;
     private Double eveningLongitude;

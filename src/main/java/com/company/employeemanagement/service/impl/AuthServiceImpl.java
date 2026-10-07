@@ -25,12 +25,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private static final ZoneId IST_ZONE = ZoneId.of("Asia/Kolkata");
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -67,8 +70,8 @@ public class AuthServiceImpl implements AuthService {
 
         LoginActivity activity = LoginActivity.builder()
                 .user(user)
-                .loginDate(LocalDate.now())
-                .loginTime(LocalTime.now())
+                .loginDate(LocalDate.now(IST_ZONE))
+                .loginTime(LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS))
                 .status(LoginStatus.ACTIVE)
                 .ipAddress(ipAddress)
                 .isOfficeLocation(isOffice)
@@ -110,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
         // Find the most recent ACTIVE session — use JWT identity, never frontend-provided ID
         loginActivityRepository.findTopByUserAndStatusOrderByCreatedAtDesc(currentUser, LoginStatus.ACTIVE)
                 .ifPresent(activity -> {
-                    LocalTime logoutTime = LocalTime.now();
+                    LocalTime logoutTime = LocalTime.now(IST_ZONE).truncatedTo(ChronoUnit.SECONDS);
                     activity.setLogoutTime(logoutTime);
                     activity.setSessionDuration(DateUtils.calculateDuration(activity.getLoginTime(), logoutTime));
                     activity.setStatus(LoginStatus.LOGGED_OUT);

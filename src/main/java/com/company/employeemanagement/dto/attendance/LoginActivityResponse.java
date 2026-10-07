@@ -1,5 +1,6 @@
 package com.company.employeemanagement.dto.attendance;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.company.employeemanagement.entity.LoginStatus;
 
 import java.time.LocalDate;
@@ -12,7 +13,9 @@ public class LoginActivityResponse {
     private String employeeName;
     private String departmentName;
     private LocalDate loginDate;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime loginTime;
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime logoutTime;
     private String sessionDuration;
     private LoginStatus status;
