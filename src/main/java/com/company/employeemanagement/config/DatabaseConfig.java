@@ -24,13 +24,13 @@ public class DatabaseConfig {
     @Value("${DB_NAME:employee_management}")
     private String dbName;
 
-    @Value("${DB_USERNAME:root}")
+    @Value("${spring.datasource.username:${DB_USERNAME:root}}")
     private String dbUsername;
 
-    @Value("${DB_PASSWORD:password}")
+    @Value("${spring.datasource.password:${DB_PASSWORD:password}}")
     private String dbPassword;
 
-    @Value("${SPRING_DATASOURCE_URL:}")
+    @Value("${SPRING_DATASOURCE_URL:${MYSQL_URL:}}")
     private String customUrl;
 
     @Bean
@@ -42,9 +42,31 @@ public class DatabaseConfig {
         String username = dbUsername;
         String password = dbPassword;
 
+        // 1. Process customUrl (SPRING_DATASOURCE_URL or MYSQL_URL) if provided
         if (customUrl != null && !customUrl.isBlank()) {
-            finalUrl = sanitizeJdbcUrl(customUrl);
-        } else if (dbHost != null && (dbHost.startsWith("mysql://") || dbHost.contains("@"))) {
+            String rawUrl = customUrl.trim();
+
+            // Extract credentials from customUrl if present (e.g. mysql://user:pass@host or jdbc:mysql://user:pass@host)
+            String uriFormat = rawUrl;
+            if (uriFormat.startsWith("jdbc:mysql://")) {
+                uriFormat = uriFormat.substring(5);
+            }
+            if (uriFormat.startsWith("mysql://") && uriFormat.contains("@")) {
+                try {
+                    URI uri = new URI(uriFormat);
+                    if (uri.getUserInfo() != null) {
+                        String[] userInfo = uri.getUserInfo().split(":");
+                        if (userInfo.length > 0 && !userInfo[0].isBlank()) username = userInfo[0];
+                        if (userInfo.length > 1 && !userInfo[1].isBlank()) password = userInfo[1];
+                    }
+                } catch (Exception e) {
+                    log.warn("Could not extract user info from customUrl URI", e);
+                }
+            }
+            finalUrl = sanitizeJdbcUrl(rawUrl);
+        }
+        // 2. Process DB_HOST if provided as a URI
+        else if (dbHost != null && (dbHost.startsWith("mysql://") || dbHost.contains("@"))) {
             try {
                 String cleanHost = dbHost;
                 if (!cleanHost.startsWith("mysql://")) {
@@ -79,7 +101,9 @@ public class DatabaseConfig {
                 log.warn("Failed to parse DB_HOST URI, falling back to basic construction", e);
                 finalUrl = buildStandardJdbcUrl(dbHost, dbPort, dbName);
             }
-        } else {
+        }
+        // 3. Fallback standard JDBC URL construction
+        else {
             finalUrl = buildStandardJdbcUrl(dbHost, dbPort, dbName);
         }
 
