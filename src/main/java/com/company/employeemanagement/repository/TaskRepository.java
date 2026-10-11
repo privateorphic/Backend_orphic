@@ -6,6 +6,7 @@ import com.company.employeemanagement.entity.TaskStatus;
 import com.company.employeemanagement.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -18,14 +19,26 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
 
+
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     List<Task> findByAssignedTo(User user);
+
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     Page<Task> findByAssignedTo(User user, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     List<Task> findByAssignedToAndStatus(User user, TaskStatus status);
+
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     List<Task> findByStatus(TaskStatus status);
+
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     List<Task> findByPriority(TaskPriority priority);
 
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     Page<Task> findByDepartmentId(Long departmentId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
     Page<Task> findByStatus(TaskStatus status, Pageable pageable);
 
     long countByStatus(TaskStatus status);
@@ -41,7 +54,8 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
     @Query("SELECT t.priority, COUNT(t) FROM Task t GROUP BY t.priority")
     List<Object[]> countByPriorityGrouped();
 
-    @Query("SELECT t FROM Task t WHERE t.assignedTo.id = :userId AND t.status = 'TODO' OR t.status = 'IN_PROGRESS' ORDER BY t.deadline ASC")
+    @EntityGraph(attributePaths = {"assignedTo", "createdBy", "department"})
+    @Query("SELECT t FROM Task t WHERE t.assignedTo.id = :userId AND (t.status = 'TODO' OR t.status = 'IN_PROGRESS') ORDER BY t.deadline ASC")
     List<Task> findPendingTasksForUser(@Param("userId") Long userId);
 
     @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo.id = :userId AND t.status = :status")

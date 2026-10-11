@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/hr/attendance")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('HR')")
+@PreAuthorize("hasAnyRole('HR', 'ADMIN')")
 @Tag(name = "HR Attendance", description = "HR Employee Daily Attendance Portal")
 public class HrAttendanceController {
 

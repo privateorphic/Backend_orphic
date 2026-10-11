@@ -4,6 +4,7 @@ import com.company.employeemanagement.entity.DailyWork;
 import com.company.employeemanagement.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,10 +17,16 @@ import java.util.List;
 @Repository
 public interface DailyWorkRepository extends JpaRepository<DailyWork, Long> {
 
+    @EntityGraph(attributePaths = {"user", "task"})
     List<DailyWork> findByUserOrderByWorkDateDesc(User user);
+
+    @EntityGraph(attributePaths = {"user", "task"})
     Page<DailyWork> findByUserOrderByWorkDateDesc(User user, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"user", "task"})
     List<DailyWork> findByUserAndWorkDate(User user, LocalDate date);
+
+    @EntityGraph(attributePaths = {"user", "task"})
     List<DailyWork> findByUserAndWorkDateBetween(User user, LocalDate start, LocalDate end);
 
     @Query("SELECT SUM(dw.hoursWorked) FROM DailyWork dw WHERE dw.user.id = :userId AND dw.workDate = :date")

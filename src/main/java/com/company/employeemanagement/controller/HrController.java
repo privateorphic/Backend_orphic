@@ -68,6 +68,12 @@ public class HrController {
         return ResponseEntity.ok(ApiResponse.success(userService.getEmployee(id)));
     }
 
+    @GetMapping("/employees/by-employee-id/{employeeId}")
+    @Operation(summary = "Get employee by employee ID code")
+    public ResponseEntity<ApiResponse<EmployeeResponse>> getEmployeeByEmployeeId(@PathVariable String employeeId) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getEmployeeByEmployeeId(employeeId)));
+    }
+
     @PutMapping("/employees/{id}")
     @Operation(summary = "Update employee")
     public ResponseEntity<ApiResponse<EmployeeResponse>> updateEmployee(@PathVariable Long id,

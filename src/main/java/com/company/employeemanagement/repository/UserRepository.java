@@ -5,6 +5,7 @@ import com.company.employeemanagement.entity.User;
 import com.company.employeemanagement.entity.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -18,8 +19,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
+    @EntityGraph(attributePaths = {"department"})
     Optional<User> findByEmail(String email);
+
+    @EntityGraph(attributePaths = {"department"})
     Optional<User> findByEmployeeId(String employeeId);
+
+    @EntityGraph(attributePaths = {"department"})
     Optional<User> findByEmailOrEmployeeId(String email, String employeeId);
 
     boolean existsByEmail(String email);
@@ -30,16 +36,25 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     long countByRoleAndStatus(Role role, UserStatus status);
     long countByJoiningDateBetween(LocalDate start, LocalDate end);
 
+    @EntityGraph(attributePaths = {"department"})
     List<User> findByDepartmentId(Long departmentId);
+
+    @EntityGraph(attributePaths = {"department"})
     List<User> findByRole(Role role);
+
+    @EntityGraph(attributePaths = {"department"})
     List<User> findByStatus(UserStatus status);
 
+    @EntityGraph(attributePaths = {"department"})
     @Query("SELECT u FROM User u WHERE u.role = :role AND u.status = 'ACTIVE'")
     List<User> findActiveByRole(@Param("role") Role role);
 
     @Query("SELECT u.department.name, COUNT(u) FROM User u WHERE u.status = 'ACTIVE' GROUP BY u.department.name")
     List<Object[]> countByDepartment();
 
+    @EntityGraph(attributePaths = {"department"})
     Page<User> findByRole(Role role, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"department"})
     Page<User> findByDepartmentId(Long departmentId, Pageable pageable);
 }

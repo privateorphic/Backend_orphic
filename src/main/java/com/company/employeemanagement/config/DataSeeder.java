@@ -33,6 +33,17 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void fixSchemaConstraints() {
+        try {
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS _schema_patch_version (patch_name VARCHAR(100) PRIMARY KEY)");
+            Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM _schema_patch_version WHERE patch_name = 'v1_schema_constraints'", Integer.class);
+            if (count != null && count > 0) {
+                log.info("✅ Schema fixes already applied, skipping.");
+                return;
+            }
+        } catch (Exception e) {
+            log.debug("Schema patch check failed, running scripts: {}", e.getMessage());
+        }
+
         String[] alterQueries = {
             "ALTER TABLE notifications MODIFY COLUMN recipient_id BIGINT NULL",
             "ALTER TABLE leave_requests MODIFY COLUMN employee_id BIGINT NULL",
@@ -58,6 +69,10 @@ public class DataSeeder implements CommandLineRunner {
                 log.debug("Skipping schema query: {} -> {}", query, e.getMessage());
             }
         }
+
+        try {
+            jdbcTemplate.execute("INSERT IGNORE INTO _schema_patch_version (patch_name) VALUES ('v1_schema_constraints')");
+        } catch (Exception ignored) {}
     }
 
     private void seedDepartments() {

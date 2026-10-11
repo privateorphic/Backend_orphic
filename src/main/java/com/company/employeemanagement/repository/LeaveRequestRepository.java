@@ -6,6 +6,7 @@ import com.company.employeemanagement.entity.LeaveType;
 import com.company.employeemanagement.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,26 +18,39 @@ import java.util.List;
 @Repository
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long> {
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     List<LeaveRequest> findByUserOrderByCreatedAtDesc(User user);
+
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     Page<LeaveRequest> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     Page<LeaveRequest> findByStatus(LeaveStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     List<LeaveRequest> findByStatus(LeaveStatus status);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     List<LeaveRequest> findByUserAndStatus(User user, LeaveStatus status);
 
     long countByStatus(LeaveStatus status);
     long countByUserAndStatus(User user, LeaveStatus status);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     @Query("SELECT lr FROM LeaveRequest lr WHERE lr.startDate <= :date AND lr.endDate >= :date AND lr.status = 'APPROVED'")
     List<LeaveRequest> findActiveLeaveOnDate(@Param("date") LocalDate date);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     @Query("SELECT lr FROM LeaveRequest lr WHERE lr.user = :user AND lr.startDate <= :date AND lr.endDate >= :date AND lr.status = 'APPROVED' AND lr.leaveType = com.company.employeemanagement.entity.LeaveType.WORK_FROM_HOME")
     List<LeaveRequest> findApprovedWfhRequestOnDate(@Param("user") User user, @Param("date") LocalDate date);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     List<LeaveRequest> findByUserAndLeaveType(User user, LeaveType leaveType);
+
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     List<LeaveRequest> findByLeaveTypeOrderByCreatedAtDesc(LeaveType leaveType);
 
+    @EntityGraph(attributePaths = {"user", "user.department", "reviewedBy"})
     @Query("SELECT lr FROM LeaveRequest lr WHERE lr.user = :user AND lr.startDate <= :date AND lr.endDate >= :date AND lr.status = 'APPROVED'")
     List<LeaveRequest> findApprovedLeaveOnDate(@Param("user") User user, @Param("date") LocalDate date);
 
