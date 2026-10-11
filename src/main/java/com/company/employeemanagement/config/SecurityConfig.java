@@ -74,9 +74,12 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 // Admin and HR shared endpoints
-                .requestMatchers("/api/admin/tasks/**", "/api/v1/admin/tasks/**").hasAnyRole("ADMIN", "HR")
-                .requestMatchers("/api/admin/attendance/**", "/api/v1/admin/attendance/**").hasAnyRole("ADMIN", "HR")
-                .requestMatchers("/api/admin/wfh/**", "/api/v1/admin/wfh/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/tasks", "/api/admin/tasks/**", "/api/v1/admin/tasks", "/api/v1/admin/tasks/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/attendance", "/api/admin/attendance/**", "/api/v1/admin/attendance", "/api/v1/admin/attendance/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/wfh", "/api/admin/wfh/**", "/api/v1/admin/wfh", "/api/v1/admin/wfh/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/employees", "/api/admin/employees/**", "/api/v1/admin/employees", "/api/v1/admin/employees/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/departments", "/api/admin/departments/**", "/api/v1/admin/departments", "/api/v1/admin/departments/**").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/reports", "/api/admin/reports/**", "/api/v1/admin/reports", "/api/v1/admin/reports/**").hasAnyRole("ADMIN", "HR")
                 // Admin only
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // HR and Admin

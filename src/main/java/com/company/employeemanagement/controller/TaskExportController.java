@@ -18,7 +18,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @RestController
-@RequestMapping({"/api/admin/tasks", "/api/v1/admin/tasks"})
+@RequestMapping({"/api/admin/tasks", "/api/v1/admin/tasks", "/api/hr/tasks", "/api/v1/hr/tasks"})
 @RequiredArgsConstructor
 public class TaskExportController {
 
