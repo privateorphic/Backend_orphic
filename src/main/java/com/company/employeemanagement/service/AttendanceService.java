@@ -323,9 +323,17 @@ public class AttendanceService {
 
             // If evening snapshots are not frozen yet (user active during the shift before check-out),
             // construct current live snapshots from real-time tasks so completion and updates show live!
+            // Exclude tasks that were completed on previous days.
             if (eveningSnapshots.isEmpty()) {
                 LocalDateTime now = LocalDateTime.now(IST_ZONE);
                 eveningSnapshots = taskRepository.findByAssignedTo(employee).stream()
+                        .filter(t -> {
+                            if (t.getStatus() == TaskStatus.COMPLETED) {
+                                return (t.getCompletedAt() != null && t.getCompletedAt().toLocalDate().isEqual(queryDate))
+                                        || (t.getCompletedAt() == null && t.getUpdatedAt() != null && t.getUpdatedAt().toLocalDate().isEqual(queryDate));
+                            }
+                            return true;
+                        })
                         .map(t -> TaskSnapshotDto.builder()
                                 .taskId(t.getId())
                                 .taskTitle(t.getTitle())
@@ -505,7 +513,18 @@ public class AttendanceService {
             }
         } else {
             // Active shift (before check-out): calculate live current task metrics for today!
-            List<Task> liveTasks = taskRepository.findByAssignedTo(employee);
+            // Filter out tasks completed on previous days
+            LocalDate attDate = attendance.getAttendanceDate() != null ? attendance.getAttendanceDate() : LocalDate.now();
+            List<Task> liveTasks = taskRepository.findByAssignedTo(employee).stream()
+                    .filter(t -> {
+                        if (t.getStatus() == TaskStatus.COMPLETED) {
+                            return (t.getCompletedAt() != null && t.getCompletedAt().toLocalDate().isEqual(attDate))
+                                    || (t.getCompletedAt() == null && t.getUpdatedAt() != null && t.getUpdatedAt().toLocalDate().isEqual(attDate));
+                        }
+                        return true;
+                    })
+                    .collect(Collectors.toList());
+
             finalCount = liveTasks.size();
             Set<Long> liveTaskIds = liveTasks.stream().map(Task::getId).collect(Collectors.toSet());
             added = liveTaskIds.stream().filter(id -> !morningTaskIds.contains(id)).count();
@@ -556,7 +575,11 @@ public class AttendanceService {
                 }
             }
             if (eve.getTaskStatus() == TaskStatus.COMPLETED) {
-                completed.add(eve);
+                TaskSnapshotDto morn = morningMap.get(eve.getTaskId());
+                // Only consider completed if it was newly finished during the shift (or added & completed)
+                if (morn == null || morn.getTaskStatus() != TaskStatus.COMPLETED) {
+                    completed.add(eve);
+                }
             }
         }
 

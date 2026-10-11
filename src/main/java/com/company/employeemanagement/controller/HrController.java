@@ -8,6 +8,9 @@ import com.company.employeemanagement.dto.hr.DepartmentResponse;
 import com.company.employeemanagement.dto.leave.LeaveApprovalRequest;
 import com.company.employeemanagement.dto.leave.LeaveResponse;
 import com.company.employeemanagement.dto.report.HRDashboardResponse;
+import com.company.employeemanagement.dto.task.CreateTaskRequest;
+import com.company.employeemanagement.dto.task.TaskResponse;
+import com.company.employeemanagement.dto.task.UpdateTaskRequest;
 import com.company.employeemanagement.exception.ApiResponse;
 import com.company.employeemanagement.service.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +40,7 @@ public class HrController {
     private final LeaveService leaveService;
     private final LoginActivityService loginActivityService;
     private final DepartmentService departmentService;
+    private final TaskService taskService;
 
     // ===== DASHBOARD =====
     @GetMapping("/dashboard")
@@ -137,10 +141,47 @@ public class HrController {
         return ResponseEntity.ok(ApiResponse.success(loginActivityService.getEmployeeLoginActivity(employeeId, pageable)));
     }
 
-    //  DEPARTMENTS 
+    // ===== DEPARTMENTS =====
     @GetMapping("/departments")
     @Operation(summary = "List all departments")
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getDepartments() {
         return ResponseEntity.ok(ApiResponse.success(departmentService.getAllDepartments()));
+    }
+
+    // ===== TASKS =====
+    @GetMapping("/tasks")
+    @Operation(summary = "List all tasks")
+    public ResponseEntity<ApiResponse<Page<TaskResponse>>> getAllTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(ApiResponse.success(taskService.getAllTasks(pageable)));
+    }
+
+    @GetMapping("/tasks/{id}")
+    @Operation(summary = "Get task by ID")
+    public ResponseEntity<ApiResponse<TaskResponse>> getTask(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(taskService.getTask(id)));
+    }
+
+    @PostMapping("/tasks")
+    @Operation(summary = "Create task")
+    public ResponseEntity<ApiResponse<TaskResponse>> createTask(@Valid @RequestBody CreateTaskRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(taskService.createTask(request), "Task created successfully"));
+    }
+
+    @PutMapping("/tasks/{id}")
+    @Operation(summary = "Update task")
+    public ResponseEntity<ApiResponse<TaskResponse>> updateTask(@PathVariable Long id,
+                                                                 @RequestBody UpdateTaskRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(taskService.updateTask(id, request), "Task updated"));
+    }
+
+    @DeleteMapping("/tasks/{id}")
+    @Operation(summary = "Cancel task")
+    public ResponseEntity<ApiResponse<Void>> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Task cancelled"));
     }
 }

@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 // Admin and HR shared endpoints
-                .requestMatchers("/api/admin/tasks/export", "/api/v1/admin/tasks/export").hasAnyRole("ADMIN", "HR")
+                .requestMatchers("/api/admin/tasks/**", "/api/v1/admin/tasks/**").hasAnyRole("ADMIN", "HR")
                 .requestMatchers("/api/admin/attendance/**", "/api/v1/admin/attendance/**").hasAnyRole("ADMIN", "HR")
                 .requestMatchers("/api/admin/wfh/**", "/api/v1/admin/wfh/**").hasAnyRole("ADMIN", "HR")
                 // Admin only

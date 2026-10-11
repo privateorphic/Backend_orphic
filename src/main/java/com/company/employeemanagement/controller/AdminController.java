@@ -33,8 +33,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "Admin", description = "Admin-only APIs")
+@PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+@Tag(name = "Admin", description = "Admin & HR Management APIs")
 public class AdminController {
 
     private final UserService userService;

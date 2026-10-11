@@ -32,10 +32,37 @@ public class TaskSnapshotService {
         }
 
         List<Task> currentTasks = taskRepository.findByAssignedTo(employee);
+        LocalDate attendanceDate = attendance.getAttendanceDate() != null ? attendance.getAttendanceDate() : LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
         List<DailyTaskSnapshot> snapshots = new ArrayList<>();
 
         for (Task t : currentTasks) {
+            // In the morning, only capture active/pending tasks (TODO, IN_PROGRESS) or tasks starting today.
+            // Exclude tasks already completed on previous days.
+            if (snapshotType == SnapshotType.MORNING) {
+                if (t.getStatus() == TaskStatus.COMPLETED) {
+                    boolean completedBeforeToday = (t.getCompletedAt() != null && t.getCompletedAt().toLocalDate().isBefore(attendanceDate))
+                            || (t.getCompletedAt() == null && t.getUpdatedAt() != null && t.getUpdatedAt().toLocalDate().isBefore(attendanceDate));
+                    if (completedBeforeToday) {
+                        continue;
+                    }
+                }
+            }
+
+            // In the evening (checkout), ONLY capture:
+            // - Active tasks (TODO, IN_PROGRESS)
+            // - Tasks that were COMPLETED TODAY (on this attendanceDate)
+            // Exclude tasks completed on previous days so they are not re-added at checkout time.
+            if (snapshotType == SnapshotType.EVENING) {
+                if (t.getStatus() == TaskStatus.COMPLETED) {
+                    boolean completedToday = (t.getCompletedAt() != null && t.getCompletedAt().toLocalDate().isEqual(attendanceDate))
+                            || (t.getCompletedAt() == null && t.getUpdatedAt() != null && t.getUpdatedAt().toLocalDate().isEqual(attendanceDate));
+                    if (!completedToday) {
+                        continue;
+                    }
+                }
+            }
+
             DailyTaskSnapshot snapshot = new DailyTaskSnapshot();
             snapshot.setEmployee(employee);
             snapshot.setAttendance(attendance);
